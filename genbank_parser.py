@@ -26,7 +26,7 @@ class GenBank:
         def assign_genome_length(self, file_contents: list) -> int:
             for line in file_contents:
                 if "REFERENCE" in line:
-                    self.genome_length = line.split(" ")[-1].replace(")", "").strip()
+                    self.genome_length = int(line.split(" ")[-1].replace(")", "").strip())
 
         def annotate_cds(self, Gene, file_contents: list) -> object:
             for line in file_contents:
