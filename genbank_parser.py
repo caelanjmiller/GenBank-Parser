@@ -1,5 +1,6 @@
 from pathlib import Path
 from textwrap import wrap
+from itertools import islice
 import os
 
 
@@ -28,18 +29,20 @@ class GenBank:
                 if "REFERENCE" in line:
                     self.genome_length = int(line.split(" ")[-1].replace(")", "").strip())
 
-        def annotate_cds(self, Gene, file_contents: list) -> object:
-            for line in file_contents:
-                if "ORIGIN" not in line:
-                    raise Exception("No ORIGIN found in GenBank File")
-                else:
-                    pass
+        def annotate_cds(self, file_contents: list) -> object:
+            # Capture indices at which gene feature key occurs in GenBank file content list
+            gene_feature_indices: list = [index for index, value in enumerate(file_contents) if value.startswith('gene')]
+            # Create a list containing tuples of the indices of the information contained between each occurrence of gene feature keys
+            information_indices: list = [tuple((gene_feature_indices[index] + 1, gene_feature_indices[index + 1])) for index in range(len(gene_feature_indices) - 1)]
+            parsed_file_contents: list = [list(islice(file_contents, a, b)) for a, b in information_indices]
+    
 
         with open(self.filepath, "r") as genbank_file:
-            self.file_contents: list = genbank_file.readlines()
+            self.file_contents: list = [line.strip() for line in genbank_file.readlines()]
             assign_organism(self, self.file_contents)
             assign_accession_number(self, self.file_contents)
             assign_genome_length(self, self.file_contents)
+            annotate_cds(self, self.file_contents)
 
     class Gene:
         def __init__(self):
