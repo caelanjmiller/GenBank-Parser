@@ -27,18 +27,41 @@ class GenBank:
         def assign_genome_length(self, file_contents: list) -> int:
             for line in file_contents:
                 if "REFERENCE" in line:
-                    self.genome_length = int(line.split(" ")[-1].replace(")", "").strip())
+                    self.genome_length = int(
+                        line.split(" ")[-1].replace(")", "").strip()
+                    )
 
         def annotate_cds(self, file_contents: list) -> object:
-            # Capture indices at which gene feature key occurs in GenBank file content list
-            gene_feature_indices: list = [index for index, value in enumerate(file_contents) if value.startswith('gene')]
+            if any(line.startswith("gene") for line in file_contents):
+                # Capture indices at which gene/CDS feature key occurs in GenBank file content list
+                feature_indices: list = [
+                    index
+                    for index, value in enumerate(file_contents)
+                    if value.startswith("gene")
+                ]
+            else:
+                feature_indices: list = [
+                    index
+                    for index, value in enumerate(file_contents)
+                    if value.startswith("CDS")
+                ]
+
             # Capture index at which ORIGIN occurs - signals end of GenBank annotation before full sequence
-            origin_index: int = [index for index, value in enumerate(file_contents) if value.startswith('ORIGIN')][0]
+            origin_index: int = [
+                index
+                for index, value in enumerate(file_contents)
+                if value.startswith("ORIGIN")
+            ][0]
             # Create a list containing tuples of the indices of the information contained between each occurrence of gene feature keys
-            information_indices: list = [tuple((gene_feature_indices[index] + 1, gene_feature_indices[index + 1])) for index in range(len(gene_feature_indices) - 1)]
+            information_indices: list = [
+                tuple((feature_indices[index] + 1, feature_indices[index + 1]))
+                for index in range(len(feature_indices) - 1)
+            ]
             # Capture last gene entry prior to ORIGIN
-            information_indices.append(tuple((gene_feature_indices[-1], origin_index)))
-            parsed_file_contents: list = [list(islice(file_contents, a, b)) for a, b in information_indices]
+            information_indices.append(tuple((feature_indices[-1], origin_index)))
+            parsed_file_contents: list = [
+                list(islice(file_contents, a, b)) for a, b in information_indices
+            ]
             for gene_slice in parsed_file_contents:
                 gene = Gene()
                 gene.assign_annotated_function(gene_slice)
@@ -46,13 +69,15 @@ class GenBank:
                 gene.assign_sequence(gene_slice)
                 self.genes.append(gene)
 
-
         with open(self.filepath, "r") as genbank_file:
-            self.file_contents: list = [line.strip() for line in genbank_file.readlines()]
+            self.file_contents: list = [
+                line.strip() for line in genbank_file.readlines()
+            ]
             assign_organism(self, self.file_contents)
             assign_accession_number(self, self.file_contents)
             assign_genome_length(self, self.file_contents)
             annotate_cds(self, self.file_contents)
+
 
 class Gene:
     def __init__(self):
@@ -138,31 +163,42 @@ class Gene:
             for codon in codons:
                 if codon in CODON_TABLE.keys():
                     self.protein_sequence.append(CODON_TABLE[codon])
-    
+
     def assign_annotated_function(self, file_contents: list) -> str:
         for line in file_contents:
-            if '/product' in line:
-                self.annotated_function = line.split('/product=')[1].strip().replace('"', "")
-    
+            if "/product" in line:
+                self.annotated_function = (
+                    line.split("/product=")[1].strip().replace('"', "")
+                )
+
     def assign_protein_id(self, file_contents: list) -> str:
         for line in file_contents:
-            if '/protein_id' in line:
-                self.protein_id = line.split('/protein_id=')[1].strip().replace('"', "")
+            if "/protein_id" in line:
+                self.protein_id = line.split("/protein_id=")[1].strip().replace('"', "")
             else:
-                self.protein_id = 'NA'
+                self.protein_id = "NA"
 
     def assign_coordinates(self, file_contents: list) -> tuple:
         pass
 
     def assign_sequence(self, file_contents: list) -> str:
         for gene_entry in file_contents:
-            if 'translation' in gene_entry:        
-                translation_feature_index: int = [index for index, value in enumerate(file_contents) if 'translation' in value][0]
+            if "translation" in gene_entry:
+                translation_feature_index: int = [
+                    index
+                    for index, value in enumerate(file_contents)
+                    if "translation" in value
+                ][0]
                 lines_after_translation: list = []
                 for line in file_contents[translation_feature_index:]:
                     lines_after_translation.append(line)
                 # Join list of translation sequence together into string and format by removing whitespace and quotations
-                sequence: str = "".join(lines_after_translation).split('/translation=')[1].strip().replace('"', "")
+                sequence: str = (
+                    "".join(lines_after_translation)
+                    .split("/translation=")[1]
+                    .strip()
+                    .replace('"', "")
+                )
                 self.sequence = sequence
             else:
                 continue
