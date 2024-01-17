@@ -156,11 +156,16 @@ class Gene:
 
     def assign_sequence(self, file_contents: list) -> str:
         for gene_entry in file_contents:
-            if 'translation' in gene_entry:        
-                translation_feature_index: int = [index for index, value in enumerate(file_contents) if 'translation' in value][0]
+            if '/translation=' in gene_entry:
+                translation_feature_index: int = [index for index, value in enumerate(file_contents) if ('/translation=') in value][0]
+                end_sequence_indices: list = ([index for index, value in enumerate(file_contents) if re.search(r'[A-Z]"\Z', value)])
                 lines_after_translation: list = []
-                for line in file_contents[translation_feature_index:]:
-                    lines_after_translation.append(line)
+                if len(end_sequence_indices) > 1:
+                    end_sequence_index: int = end_sequence_indices[1] + 1
+                else:
+                    end_sequence_index: int = end_sequence_indices[0] + 1
+            for line in file_contents[translation_feature_index:end_sequence_index]:
+                lines_after_translation.append(line)
                 # Join list of translation sequence together into string and format by removing whitespace and quotations
                 sequence: str = "".join(lines_after_translation).split('/translation=')[1].strip().replace('"', "")
                 self.sequence = sequence
