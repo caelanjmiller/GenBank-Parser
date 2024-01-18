@@ -77,7 +77,26 @@ class GenBank:
             assign_accession_number(self, self.file_contents)
             assign_genome_length(self, self.file_contents)
             annotate_cds(self, self.file_contents)
-
+    
+    def genome_Shephard_export(self) -> list:
+        """Export GenBank object data into a list of dict for import into Shephard as a Proteome object"""
+        cds_protein_collection: list = []
+        for GENE in self.genes:
+            cds_information: dict = {}
+            cds_information["sequence"] = GENE.sequence
+            cds_information["unique_id"] = GENE.protein_id
+            cds_information["name"] = GENE.annotated_function
+            cds_information["attributes"] = {}
+            cds_protein_collection.append(cds_information)
+        return cds_protein_collection    
+    
+    def genome_metadata_export(self) -> dict:
+        "Export GenBank metadata (organism name, genome length, accession number) in a dict for use as attributes for a Shephard Proteome object" 
+        genome_metadata: dict = {}
+        genome_metadata["Organism"] = self.organism
+        genome_metadata["Genome_Length"] = self.genome_length
+        genome_metadata["Accession_Number"] = self.accession_number
+        return genome_metadata
 
 class Gene:
     def __init__(self):
