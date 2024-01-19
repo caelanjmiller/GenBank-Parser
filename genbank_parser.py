@@ -65,7 +65,7 @@ class GenBank:
             for gene_slice in parsed_file_contents:
                 gene = Gene()
                 gene.assign_annotated_function(gene_slice)
-                gene.assign_protein_id(gene_slice)
+                gene.assign_protein_ID(gene_slice)
                 gene.assign_sequence(gene_slice)
                 self.genes.append(gene)
 
@@ -84,7 +84,7 @@ class GenBank:
         for GENE in self.genes:
             cds_information: dict = {}
             cds_information["sequence"] = GENE.sequence
-            cds_information["unique_id"] = GENE.protein_id
+            cds_information["unique_ID"] = GENE.protein_ID
             cds_information["name"] = GENE.annotated_function
             cds_information["attributes"] = {}
             cds_protein_collection.append(cds_information)
@@ -100,7 +100,7 @@ class GenBank:
 
 class Gene:
     def __init__(self):
-        self.protein_id: str = None
+        self.protein_ID: str = None
         self.annotated_function: str = None
         self.coordinates = None
         self.sequence: str = None
@@ -190,12 +190,10 @@ class Gene:
                     line.split("/product=")[1].strip().replace('"', "")
                 )
 
-    def assign_protein_id(self, file_contents: list) -> str:
+    def assign_protein_ID(self, file_contents: list) -> str:
         for line in file_contents:
             if "/protein_id" in line:
-                self.protein_id = line.split("/protein_id=")[1].strip().replace('"', "")
-            else:
-                self.protein_id = "NA"
+                self.protein_ID = (line.split("/protein_id=")[1].strip().replace('"', ""))
 
     def assign_coordinates(self, file_contents: list) -> tuple:
         pass
